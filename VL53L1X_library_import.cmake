@@ -1,10 +1,9 @@
+set(EXTERNAL_LIB_DIR "${PROJECT_SOURCE_DIR}/external_VL53L1X")
+
 find_package(Git REQUIRED)
-message("HI ${GIT_FOUND}, ${PROJECT_SOURCE_DIR}")
-message(EXISTS "${PROJECT_SOURCE_DIR}/.git")
 if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 # Update submodules as needed
     option(GIT_SUBMODULE "Check submodules during build" ON)
-    message("HI ${GIT_SUBMODULE}")
     if(GIT_SUBMODULE)
         message(STATUS "Submodule update")
         execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
@@ -16,6 +15,10 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     endif()
 endif()
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external_libs/vl53l1x/CMakeLists.txt")
+if(NOT EXISTS "${EXTERNAL_LIB_DIR}/CMakeLists.txt")
     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif()
+
+include(${EXTERNAL_LIB_DIR}/VL53L1X_pico_api/CMakeLists.txt)
+include_directories(${EXTERNAL_LIB_DIR}/VL53L1X_pico_api/)
+link_directories(${EXTERNAL_LIB_DIR}/VL53L1X_pico_api/)

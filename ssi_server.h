@@ -3,8 +3,8 @@
 
 #include "lwip/apps/httpd.h"
 #include "pico/cyw43_arch.h"
-#include "VL53L1X_pico_api/VL53L1X_types.h"
-#include "VL53L1X_pico_api/VL53L1X_api.h"
+#include "VL53L1X_types.h"
+#include "VL53L1X_api.h"
 
 #include "lwipopts.h"
 

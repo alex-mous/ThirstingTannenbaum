@@ -14,8 +14,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 # Pull in VL53L1X lib
-include(vl53l1x_import.cmake)
-
+include(VL53L1X_library_import.cmake)
 # Initialize the SDK
 pico_sdk_init()
 
