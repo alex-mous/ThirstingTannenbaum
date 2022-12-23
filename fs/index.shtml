@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TreePi Christmas Tree Water Monitor</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+		<link rel="manifest" href="manifest.webmanifest">
+		<link rel="apple-touch-icon" href="/maskable_192x192.png">
+		<meta name="viewport" content="width=700" />
+		<meta name="theme-color" content="#ffffff" />
+		<style>
+			:root {
+				--percentfull: <!--#currentLevel-->;
+			}
+
+			html {
+				overflow-x: hidden;
+			}
+
+			.tree-container {
+				position: relative;
+				height: 460px;
+				left: calc(50% - 350px);
+			}
+
+
+			svg.star {
+				position: absolute;
+				left: 0;
+				right: 0;
+				top: 0;
+				margin: auto;
+				padding: 0;
+				z-index: 1;
+				min-width: 700px;
+			}
+
+			h3.measurement {
+				position: absolute;
+				left: 0;
+				right: 0;
+				top: 70px;
+				margin: auto;
+				text-align: center;
+				font-size: 1.2em;
+				line-height: 1.85;
+				color: white;
+				z-index: 2;
+				min-width: 700px;
+			}
+
+			svg.tree {
+				position: absolute;
+				left: 0;
+				right: 0;
+				top: 60px;
+				margin: auto;
+				z-index: 3;
+				min-width: 700px;
+			}
+
+			svg.wave {
+				position: absolute;
+				left: 100px;
+				right: 0;
+				top: calc( 440px - var(--percentfull)*370px ); /*Scale from 70px to 440px */
+				margin: auto;
+				z-index: -1;
+				animation: WaveUDMotion	1.5s linear 0s 1 normal, WaveLRMotion 0.75s linear 0s infinite normal;
+				-webkit-animation: WaveUDMotion	1.5s linear 0s 1 normal, WaveLRMotion 0.75s linear 0s infinite normal;
+			}
+
+			svg.wavebox {
+				position: absolute;
+				left: 100px;
+				right: 0;
+				top: calc( 453px - var(--percentfull)*435px ); /*Scale from 18px to 453px */
+				margin: auto;
+				z-index: -1;
+				height: calc( var(--percentfull)*435px + 5px ); /*Scale from 5px to 440px */
+				animation: WaveboxUDMotion 1.5s linear 0s 1 normal;
+				-webkit-animation: WaveboxUDMotion 1.5s linear 0s 1 normal;
+			}
+
+			@keyframes WaveboxUDMotion {
+				0% {
+					height: 5px;
+					top: 453px;
+				}
+				100% {
+					height: calc( var(--percentfull)*435px + 5px ); /*Scale from 5px to 440px */
+					top: calc( 453px - var(--percentfull)*435px ); /*Scale from 18px to 453px */
+				}
+			}
+
+			@keyframes WaveUDMotion {
+				0% {
+					top: 440px;
+				}
+				100% {
+					top: calc( 440px - var(--percentfull)*370px ); /*Scale from 70px to 440px */
+				}
+			}
+
+			@keyframes WaveLRMotion {
+				0% {
+					transform: translateX(-95px);
+				}
+				100% {
+					transform: translateX(90px);
+				}
+			}
+
+		</style>
+    </head>
+    <body>
+<!--#Hello-->
+        <div class="row">
+            <div class="col text-center py-3">
+                <p class="h1">TreePi</p>
+		<p class="lead">Raspberry Pi-powered Christmas tree water level monitor</p>
+            </div>
+        </div>
+		<ul class="nav nav-tabs justify-content-center" id="navTabs" role="tablist">
+			<li class="nav-item">
+				<a class="nav-link active" id="homeTab" href="#home">Home</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" id="graphTab" href="#graph">Graph</a>
+			</li>			
+			<li class="nav-item">
+				<a class="nav-link" id="fillingTab" href="#filling">Filling Mode</a>
+			</li>			
+			<li class="nav-item">
+				<a class="nav-link" id="settingsTab" href="#settings">Settings</a>
+			</li>			
+		</ul>
+	<div class="tab-content">
+		<div class="tab-pane fade show active" id="home" role="tabpanel">
+			<div class="row">
+				<div class="col text-center py-3">
+					<p class="h3 text-center py-2">Tree Status</p>
+					<p class="h4 text-center py-1 text-warning" id="currLevel">Loading...</p>
+				</div>
+				<noscript>Please enable JavaScript for this app to function</noscript>
+			</div>
+			<div class="row d-none" id="installBtnCtn">
+				<div class="col text-center py-3">
+					<p class="h3 text-center py-2">Install Web App</p>
+					<p class="h5 text-center py-1">Install the TreePi web app for more reliable usage</p>
+					<button class="btn btn-primary btn-lg" id="installBtn">Install</button>
+				</div>
+			</div>
+			<hr>
+        		<div class="row py-3">
+				<div class="tree-container">
+					<!--/*SVG code for the star on top of the tree*/-->
+					<!--/*  calculating x and y from radius (r) and angle (n) (for star) x = cos(n) * r + xoffset
+ 					and y = -1 * (sin(n) * r) + yoffest (because y increase as you go down the screen)
+ 					angle of star is 360/5 = 72 degrees but peak at 90 so angles are 18, 90, 162, 234 and 306;
+ 					inner point created by another circle with radius r/2 and also angles offset by 36 degrees
+ 					so angles are 54, 126, 198, 270 and 342
+					*/-->
+					<svg class="star">
+						<rect width="700px" height="70px" x="0" y="0" fill="#eeeeee" />
+						<svg width="50px" height="50px" x="325px" y="10px" viewbox="0 0 100 100">
+							<path d="M50 0 L35.3 29.8 L5 31 L26.2 57.7 L20 90 L50 75 L80 90 L73.8 57.7 L95 31 L64.7 29.8 L50 0" fill="gold" stroke="none" />
+						</svg>
+					</svg>
+		
+					<!--/*Labels for visual reference of how full the tree is*/-->
+		
+					<h3 class="measurement">	100%	<br>	90%	<br>	80%	<br>	70%	<br>	60%	<br>	50%	<br>	40%	<br>	30%	<br>	20%	<br>	10%	<br>	0% </h3>
+		
+					<!--/*SVG code for the mask and border of the tree branches and trunk*/-->
+					<svg class="tree" width="700px" height="400px" viewBox="-99 1 399 299" preserveAspectRatio="none">
+						<g class="masktree">
+							<path d="M0 0 L200 0 L200 50 L100 0 L0 50 L50 50 L0 75 L50 75 L0 100 L50 100 L0 125 L50 125 L0 150 L50 150 L0 175 L50 175 L0 200 L50 200 L0 225 L50 225 L0 250 L50 250 L0 275 M200 50 L150 50 L200 75 L150 75 L200 100 L150 100 L200 125 L150 125 L200 150 L150 150 L200 175 L150 175 L200 200 L150 200 L200 225 150 225 L200 250 L150 250 L200 275 Z" fill="#eeeeee" stroke="none"/>
+							<path d="M0 275 L0 300 L75 300 L75 275 L0 275 M125 275 L125 300 L200 300 L200 275 L125 275 Z" fill="#eeeeee" stroke="none" />
+							<rect width="101px" height="300px" x="-100" y="0" fill="#eeeeee" />
+							<rect width="101px" height="300px" x="199" y="0" fill="#eeeeee" />
+						</g>
+						<!--/*SVG code for the outline or the tree branches and trunk*/-->
+						<g class="bordertree">
+							<path d="M200 50 L100 0 L0 50 L50 50 L0 75 L50 75 L0 100 L50 100 L0 125 L50 125 L0 150 L50 150 L0 175 L50 175 L0 200 L50 200 L0 225 L50 225 L0 250 L50 250 L0 275 M200 50 L150 50 L200 75 L150 75 L200 100 L150 100 L200 125 L150 125 L200 150 L150 150 L200 175 L150 175 L200 200 L150 200 L200 225 150 225 L200 250 L150 250 L200 275" fill="none" stroke="#328832" stroke-width="3px"/>
+							<path d="M0 275 L75 275 L75 300 L125 300 L125 275 L200 275" fill="none" stroke="#328832" stroke-width="3px" />
+						</g>
+					</svg>
+					
+					<!--/*SVG and HTML code for the water part of the rising water animation*/-->
+					<svg class="wave" width="500px" height="20px" viewBox="0 0 720 44" preserveAspectRatio="none">
+						<path d="m 0.04289559,11.271448 c 0,0 28.21305541,-10.56188569 44.97380341,-10.56188576 16.760748,-7e-8 28.213058,10.56188576 44.973807,10.56188576 16.760744,0 28.213054,-10.56188569 44.973804,-10.56188576 16.76075,-7e-8 28.21306,10.56188576 44.97381,10.56188576 16.76075,0 28.21305,-10.56188531 44.9738,-10.56188576 16.76075,-4.5e-7 28.21306,10.56188676 44.9738,10.56188576 16.76075,-10e-7 28.21306,-10.56188501 44.97381,-10.56188576 16.76075,-7.5e-7 28.21305,10.56188576 44.9738,10.56188576 16.76075,0 28.21307,-10.56188651 44.97381,-10.56188576 16.76075,7.5e-7 28.21304,10.56188476 44.97379,10.56188576 16.76075,1e-6 28.21307,-10.56188576 44.97382,-10.56188576 16.76075,0 28.21307,10.56188676 44.97381,10.56188576 16.76075,-10e-7 28.21304,-10.56188501 44.97379,-10.56188576 16.76075,-7.5e-7 28.21307,10.56188576 44.97382,10.56188576 16.76075,0 28.21305,-10.56188651 44.9738,-10.56188576 16.76075,7.5e-7 44.9738,10.56188576 44.9738,10.56188576 V 42.957105 H 0.04289559 Z" stroke="none" fill="blue" />
+					</svg>
+					<svg class="wavebox" width="500px" height="30px" viewBox="0 0 720 50" preserveAspectRatio="none">
+						<rect fill="blue" width="720" height="50" x="0.26726952" y="7.9291615" />
+					</svg>
+				
+				</div>
+			</div>
+		</div>
+		<div class="tab-pane fade" id="graph" role="tabpanel">
+	        	<div class="row py-3">
+	           		<div class="col text-center">
+        	       			<p class="m-0 py-2 h4">Water Level</p>
+					<p class="m-0 py-1 h5"><span id="waterLevelTime">(choose a time period below)</span></p>
+                			<hr class="w-50">
+        	       			<p class="m-0 py-2 h4">Predicted Next Reaching 50%</p>
+					<p class="m-0 py-1 h5"><span id="equationRes"></span></p>
+                			<hr class="w-50">
+					<form id="hoursForm">
+						<div class="input-group px-4 text-center">
+							<div class="input-group-prepend">
+								<label class="input-group-text" for="timeStart">Start Time</label>
+							</div>
+							<input class="form-control input-group-append" type="datetime-local" id="timeStart" name="timeStart">
+							<div class="input-group-append">
+								<label class="input-group-text" for="timeEnd">End Time</label>
+							</div>
+							<input class="form-control input-group-append" type="datetime-local" id="timeEnd" name="timeEnd">
+							<div class="input-group-append">
+								<button class="form-control btn btn-primary">Update Hours</button>
+							</div>
+						</div>
+					</form>
+                			<hr class="w-50">
+                			<div style="min-height:50vw; min-width: 75vw" id="chartContainer">Not enough data to display</div>
+                			<hr class="w-50">
+            			</div>
+        		</div>
+			<div class="row">
+				<div class="col h5 text-center py-2">
+					Download data as a JSON file: <a href="/data.json">data.json</a>
+				</div>
+			</div>
+		</div>
+		<div class="tab-pane fade" id="filling" role="tabpanel">
+	        	<div class="row py-3">
+	           		<div class="col text-center">
+        	       			<p class="m-0 py-2 h4">Tree Filling Mode</p>
+                			<hr class="w-50">
+					<p class="h5 text-center py-2">Current Status</p>
+					<p class="h5 text-center py-1 text-warning" id="fillingMsg">Loading...</p>
+                			<hr class="w-50">
+					<form id="fillingForm">
+						<div class="input-group px-4">
+							<div class="input-group-prepend">
+								<label class="input-group-text" for="fillingTimeout">Timeout (minutes)</label>
+							</div>
+							<input class="input-group-append form-control" type="text" id="fillingTimeout" name="maxhours" value="10">
+							<div class="input-group-append">
+								<button class="form-control btn btn-primary" id="fillingFormBtn">Start filling mode!</button>
+							</div>
+						</div>
+					</form>
+                			<hr class="w-50">
+            			</div>
+        		</div>
+		</div>
+		<div class="tab-pane fade" id="settings" role="tabpanel">
+			<div class="row py-3">
+				<div class="col text-center">
+					<p class="m-0 py-2 h4">Settings</p>
+				</div>
+			</div>
+       			<hr class="w-50">
+			<div class="row py-3">
+				<div class="col text-center">
+					<form id="settingsForm" class="px-4">
+						<div class="form-group py-1">
+							<label class="font-weight-bold" for="minRange">Minimum Value</label>
+							<p>Current value: <span id="minRangeTxt"></span></p>
+							<input class="form-control" type="range" id="minRange" name="min" min="0" max="13" step="1">
+						</div>
+						<div class="form-group py-1">
+							<label class="font-weight-bold" for="maxRange">Maximum Value</label>
+							<p>Current value: <span id="maxRangeTxt"></span></p>
+							<input class="form-control" type="range" id="maxRange" name="max" min="1" max="14" step="1">
+						</div>
+						<div class="input-group py-1 pb-3">
+							<div class="input-group-prepend">
+								<label class="input-group-text" for="emailInput">Email for Alerts</label>
+							</div>
+							<input class="input-group-append form-control" type="text" id="emailInput" placeholder="Email Address" required>
+						</div>
+						<button class="btn btn-success w-100">Update</button>
+					</form>
+				</div>
+			</div>
+			<hr>
+			<div class="row py-3">
+				<div class="col text-center">
+					<p class="m-0 py-2 h4">Shutdown</p>
+				</div>
+			</div>
+       			<hr class="w-50">
+			<div class="row py-3">
+				<div class="col text-center">
+					<form id="shutdownForm">
+						<div class="input-group px-4">
+							<input class="form-control" type="password" id="password" name="password" placeholder="Shutdown password">
+							<div class="input-group-append">
+								<button class="form-control btn btn-danger">Shutdown Now</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	<hr>
+	<div class="row">
+		<div class="col h5 text-center py-2">
+		</div>
+	</div>
+	<hr>
+	<div class="row">
+		<div class="col text-center text-muted py-1">
+			Copyright (c) 2020, Alex Mous
+			<br>
+			Download certificate to install web app: <a href="/treepi.crt">treepi.crt</a>
+		</div>
+	</div>
+	<hr>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
+		<script>
+			const tabs = ["#home", "#graph", "#filling", "#settings"]; //Window tabs
+			const settings = {
+
+			};
+
+			const currentLevel = "";
+
+			/**
+			* Show the graph on the page after fetching data from the API
+			*/
+			let drawGraph = async () => {
+				const params = new URLSearchParams(window.location.search);
+				console.log(params.get("timeStart"));
+				const tStart = new Date(params.get("timeStart") || new Date()); //Get date or current time
+				const tEnd = new Date(params.get("timeEnd") || new Date());
+				document.querySelector("#waterLevelTime").innerText = `${tStart.toLocaleString()} until ${tEnd.toLocaleString()} (about ${Math.round(((tEnd-tStart)/3600000))} hours)`;
+				document.querySelector("#timeStart").value = tStart.toISOString().slice(0, -8);
+				document.querySelector("#timeEnd").value = tEnd.toISOString().slice(0, -8);
+				console.log(`Drawing graph with range of time start ${tStart} to time end ${tEnd}`);
+			
+				if (isNaN(tStart.valueOf()) || isNaN(tEnd.valueOf())) return; //Exit if invalid dates
+			
+				let data = (await (await fetch("/getdata", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						tStart: tStart.valueOf(),
+						tEnd: tEnd.valueOf()
+					})
+				})).json()).arr;
+			
+				data = data.map((row) => {
+					row[0] = (row[0] - tStart.valueOf())/3600000; //new Date(row[0]); //Time in hours from now
+					return row;
+				});
+			
+				if (data.length < 1) return; //Don't render graph if no data to show
+			
+				console.log("Drawing graph with data: ", data);
+			
+				let tableData = google.visualization.arrayToDataTable([
+					["Timestamp", "Raw Level"],
+					...data
+				]);
+			
+				let options = {
+					title: "Time vs Tree Water Level",
+					width: window.innerWidth-35,
+					height: 500,
+					hAxis: {
+						title: "Time",
+						slantedText: true,
+						slantedTextAngle: 45
+					},
+					vAxis: {
+						title: "Water Level",
+						format: "#",
+						minValue: 0,
+						maxValue: 14,
+						gridlines: {
+							count: 14
+						}
+					},
+					legend: {
+						alignment: "center",
+						position: "top",
+						maxLines: "1"
+					},
+					trendlines: {
+						0: {
+							type: 'linear',
+							visibleInLegend: true,
+							showR2: true
+						}
+					},
+					chartArea: {
+						width: "91%",
+						height: "60%",
+						top: "9%",
+						left: "8%",
+						right: "1%",
+						bottom: "31%"
+					},
+			
+				};
+			
+				let chart = new google.visualization.ScatterChart(document.getElementById('chartContainer'));
+			
+				google.visualization.events.addListener(chart, "ready", () => {
+					console.log("Chart loaded");
+					let eq = $('text[text-anchor="start"][fill="#222222"]').text();
+					eq = eq.slice(eq.indexOf("=")+1, eq.indexOf("..."));
+					let m = parseFloat(eq.slice(0, eq.indexOf("*")));
+					let b = parseFloat(eq.slice(eq.indexOf("+")+1));
+					const MIN_LEVEL = 3; const MAX_LEVEL = 12;
+					let nextFilling = new Date( tEnd.valueOf() + 3600000*((MAX_LEVEL - MIN_LEVEL)/2 - b)/m );
+					document.querySelector("#equationRes").innerHTML = nextFilling.toLocaleString();
+					console.log(m, b);
+				});
+			
+				chart.draw(tableData, options);
+			}
+			
+			/**
+			* Set the current tree water level
+			* @param {number} level Percentage water level
+			*/
+			const setGraphic = (level) => {
+				console.log("Current tree percent full: ", level.currentLevel);
+				document.querySelector(":root").style.setProperty("--percentfull", level.currentLevel/100);
+				document.querySelector("#currLevel").innerText = `${Math.round(level.currentLevel)}% full`;
+				document.querySelector("#currLevel").classList.remove("text-warning");
+				if (level.currentLevel < 35) {
+					document.querySelector("#currLevel").classList.add("text-danger");
+				} else if (level.currentLevel < 67) {
+					document.querySelector("#currLevel").classList.add("text-warning");
+				} else {
+					document.querySelector("#currLevel").classList.add("text-success");
+				}
+			}
+			
+			/**
+			* Show the settings
+			* @param {Object} settings Settings for the tree measuring code (min/max)
+			*/
+			const showSettings = (settings) => {
+				console.log("Settings: ", settings);
+				if (!settings) return;
+				document.querySelector("#minRangeTxt").innerText = settings.min;
+				document.querySelector("#minRange").value = settings.min;
+				document.querySelector("#maxRangeTxt").innerText = settings.max;
+				document.querySelector("#maxRange").value = settings.max;
+				document.querySelector("#emailInput").value = settings.email;
+			}
+			
+			/**
+			* Show the filling mode status
+			* @param {boolean} status Filling status
+			*/
+			const showFillingMode = (status) => {
+				console.log("Filling status: ", status);
+				document.querySelector("#fillingFormBtn").disabled = status; //Disable button if running/NC
+				if (status === undefined) return;
+				document.querySelector("#fillingMsg").classList.remove("text-warning");
+				document.querySelector("#fillingMsg").classList.toggle("text-success", status);
+				document.querySelector("#fillingMsg").classList.toggle("text-danger", !status);
+				document.querySelector("#fillingMsg").innerText = status ? "Running" : "Not running";
+			}
+			
+			
+			
+			/**
+			* Update a range label with the new range value
+			* @param {string} id ID of the range element
+			*/
+			const updateRangeValue = (id) => {
+				document.querySelector(`#${id}Txt`).innerText = document.querySelector(`#${id}`).value;
+			}
+			
+			/**
+			* Event handler for settings form
+			*/
+			const onSettingsForm = (ev) => {
+				ev.preventDefault();
+				fetch("/setsettings", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						min: document.querySelector("#minRange").value,
+						max: document.querySelector("#maxRange").value,
+						email: document.querySelector("#emailInput").value
+					})
+				})
+					.then(res => res.json())
+					.then(res => {
+						if (res.success) {
+							alert("Successfully updated settings");
+							window.location.reload();
+						} else {
+							alert("Invalid values. Please ensure that max is greater than min.");
+						}
+					})
+					.catch(err => {
+						alert("Unexpected error while submitting settings. Server may be offline.");
+						console.log(err);
+					});
+			}
+			
+			/**
+			* Event handler for shutdown form
+			*/
+			const onShutdownForm = (ev) => {
+				ev.preventDefault();
+				fetch("/shutdown", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						pswd: document.querySelector("#password").value,
+					})
+				})
+					.then(res => res.json())
+					.then(res => {
+						if (res.success) {
+							alert("Successfully initiated shutdown");
+						} else {
+							alert("Incorrect password. Please try again.");
+						}
+					})
+					.catch(err => {
+						alert("Unexpected error while submitting shutdown. Server may be offline.");
+						console.log(err);
+					});
+			}
+			
+			/**
+			* Event handler for shutdown form
+			*/
+			const onFillingForm = (ev) => {
+				ev.preventDefault();
+				fetch("/fillingmode", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						timeout: document.querySelector("#fillingTimeout").value
+					})
+				})
+					.then(res => res.json())
+					.then(res => {
+						if (res.success) {
+							alert("Successfully initiated filling mode");
+						} else {
+							alert("Incorrect value or internal error. Please try again.");
+						}
+						window.location.reload();
+					})
+					.catch(err => {
+						alert("Unexpected error while starting filling mode. Server may be offline.");
+						console.log(err);
+					});
+			}
+			
+			
+			//Main page-load logic
+			window.onload = () => {
+				//google.charts.load('current', {'packages':['corechart']});
+				//google.charts.setOnLoadCallback(drawGraph);
+				
+			/*	fetch("/getcurrent", { method: "POST" })
+					.then(res => res.json())
+					.then(res => setGraphic(res));*/
+			
+					setGraphic({currentLevel:50});
+				showSettings({
+					min: 1,
+					max: 55,
+					email: "none@noone.com"
+				})
+				/*fetch("/getsettings", { method: "POST" })
+					.then(res => res.json())
+					.then(res => showSettings(res.settings));
+			*/
+			/*	fetch("/getfillingmode", { method: "POST" })
+					.then(res => res.json())
+					.then(res => showFillingMode(res.status));
+			*/
+				document.querySelector("#minRange").oninput = () => updateRangeValue("minRange");
+				document.querySelector("#maxRange").oninput = () => updateRangeValue("maxRange");
+			
+				document.querySelector("#settingsForm").onsubmit = onSettingsForm;
+				document.querySelector("#shutdownForm").onsubmit = onShutdownForm;
+				document.querySelector("#fillingForm").onsubmit = onFillingForm;
+			
+				window.onhashchange = tabChange; //Bind hashchange to tabChange method
+				tabChange(); //Change tab if specified in hash
+			}
+			
+			/**
+			* Change to the tab specified in window.location.hash
+			*/
+			const tabChange = () => {
+				console.log(tabs.indexOf(window.location.hash));
+				if (tabs.indexOf(window.location.hash) < 0) return; //Exit if hash is not a tab name
+				for (let tab of tabs) {
+					if (tab != window.location.hash) {
+						$(tab + "Tab").removeClass("active");
+						$(tab).hide();
+					} else {
+						$(tab + "Tab").addClass("active");
+						$(tab).show();
+						$(tab).tab("show");
+					}
+				}
+			}
+		</script>
+    </body>
+</html>
+

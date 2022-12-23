@@ -1,0 +1,7 @@
+#ifndef _CREDENTIALS_H_
+#define _CREDENTIALS_H_
+
+#define WIFI_SSID "<YOUR_WIFI_SSID>"
+#define WIFI_PSK "<YOUR_WIFI_PASSWORD>"
+
+#endif  // _CREDENTIALS_H_

@@ -1,0 +1,3 @@
+[submodule "external_libs/vl53l1x"]
+	path = external_libs/vl53l1x
+	url = https://github.com/alex-mous/VL53L1X-C-API-for-Raspberry-Pi-Pico
