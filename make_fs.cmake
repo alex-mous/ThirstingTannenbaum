@@ -16,9 +16,6 @@ if (NOT EXISTS ${MAKE_FS_DATA_SCRIPT})
                 )
 endif()
 
-
-message(${MAKE_FS_DATA_SCRIPT})
-
 message("Running makefsdata script")
 execute_process(COMMAND
         perl ${MAKE_FS_DATA_SCRIPT}
