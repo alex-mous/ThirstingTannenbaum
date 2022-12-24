@@ -5,7 +5,7 @@
 #include "pico/cyw43_arch.h"
 #include "lwipopts.h"
 
-
+// Initialize SSI Server parameters
 void ssi_init();
 
 #endif  // _SSI_SERVER_H_

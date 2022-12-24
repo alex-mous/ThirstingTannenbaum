@@ -4,17 +4,9 @@
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 
+#include "io.h"
 #include "status.h"
 
-
-void flash_leds(int ontime, int offtime, int repeats) {
-    for (int i=0; i<repeats; i++) {
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-        sleep_ms(ontime);
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-        sleep_ms(offtime);
-    }
-}
 
 void status_log(string msg) {
 #ifdef PRINT_STDIO

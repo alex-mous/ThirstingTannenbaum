@@ -19,9 +19,6 @@
 
 using std::string;
 
-// Flash onboard LED <repeats> times, on for <ontime> (ms), off for <offtime> (ms)
-void flash_leds(int ontime, int offtime, int repeats);
-
 // Log a message to STDIO
 void status_log(string msg);
 
