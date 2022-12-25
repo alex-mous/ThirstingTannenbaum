@@ -188,7 +188,7 @@
 					<p class="m-0 py-2 h4">Settings</p>
 				</div>
 			</div>
-	   			<hr class="w-50">
+			<hr class="w-50">
 			<div class="row py-3">
 				<div class="col text-center">
 					<form id="settingsForm" class="px-4" action="/updatesettings">
@@ -196,13 +196,19 @@
 							<div class="input-group-prepend">
 								<label class="input-group-text" for="minRange">"Fullest" Level (in mm)</label>
 							</div>
-							<input class="input-group-append form-control" type="text" id="minRange" name="min">
+							<input class="input-group-append form-control" type="number" min="0" max="1000" id="minRange" name="min">
+							<div class="input-group-append">
+								<button class="btn btn-outline-secondary" type="button" id="minRangeBtn">Set to current level</button>
+							</div>
 						</div>
 						<div class="input-group py-1 pb-3">
 							<div class="input-group-prepend">
 								<label class="input-group-text" for="minRange">"Emptiest" Level (in mm)</label>
 							</div>
-							<input class="input-group-append form-control" type="text" id="maxRange" name="max">
+							<input class="input-group-append form-control" type="number" min="1" max="1001" id="maxRange" name="max">
+							<div class="input-group-append">
+								<button class="btn btn-outline-secondary" type="button" id="maxRangeBtn">Set to current level</button>
+							</div>
 						</div>
 						<button class="btn btn-success w-100">Update</button>
 					</form>
@@ -221,9 +227,7 @@
 	<hr>
 	<div class="row">
 		<div class="col text-center text-muted py-1">
-			Copyright (c) 2020, Alex Mous
-			<br>
-			Download certificate to install web app: <a href="/ThirstingTannenbaum.crt">ThirstingTannenbaum.crt</a>
+			Copyright (c) 2022, Alex Mous
 		</div>
 	</div>
 	<hr>
@@ -262,13 +266,20 @@
 				document.querySelector("#minRange").value = settings.min;
 				document.querySelector("#maxRange").value = settings.max;
 			}
-			
+
 			/**
-			 * Update a range label with the new range value
-			 * @param {string} id ID of the range element
+			 * Ensure the form inputs are valid
 			 */
-			const updateRangeValue = (id) => {
-				document.querySelector(`#${id}Txt`).innerText = document.querySelector(`#${id}`).value;
+			const checkRangeValid = () => {
+				let minR = document.querySelector("#minRange");
+				let maxR = document.querySelector("#maxRange")
+				if (minR.value < maxR.value) {
+					minR.setCustomValidity("");
+					maxR.setCustomValidity("");
+				} else {
+					minR.setCustomValidity('"Emptiest" must be larger than "Fullest"');
+					maxR.setCustomValidity('"Emptiest" must be larger than "Fullest"');
+				}
 			}
 			
 			//Main page-load logic
@@ -289,11 +300,30 @@
 					max: maxLevel
 				});
 			
-				document.querySelector("#minRange").oninput = () => updateRangeValue("minRange");
-				document.querySelector("#maxRange").oninput = () => updateRangeValue("maxRange");
+				document.querySelector("#minRangeBtn").onclick = () => {
+					document.querySelector("#minRange").value = currLevel;
+					checkRangeValid();
+				}
+				document.querySelector("#maxRangeBtn").onclick = () => {
+					document.querySelector("#maxRange").value = currLevel;
+					checkRangeValid();
+				}
 			
 				window.onhashchange = tabChange; //Bind hashchange to tabChange method
 				tabChange(); //Change tab if specified in hash
+
+				// Add form validation for settings
+				document.querySelector("#minRange").oninput = checkRangeValid;
+				document.querySelector("#maxRange").oninput = checkRangeValid;
+
+				let form = document.querySelector('#settingsForm')
+				form.onsubmit = (ev) => {
+					if (!form.checkValidity()) {
+						event.preventDefault()
+						event.stopPropagation()
+					}
+					form.classList.add('was-validated')
+				};
 			}
 			
 			/**

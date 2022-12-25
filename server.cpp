@@ -1,6 +1,7 @@
 #include "lwip/apps/httpd.h"
 #include "pico/cyw43_arch.h"
 #include "pico/util/queue.h"
+#include "pico/multicore.h"
 #include "hardware/flash.h"
 
 #include "lwipopts.h"
@@ -18,10 +19,12 @@ void write_settings_flash() {
   memset(buf, 0x0, FLASH_PAGE_SIZE);
   *((uint16_t*)buf) = min_level;
   *(1+(uint16_t*)buf) = max_level;
+  multicore_lockout_start_blocking();
   uint32_t ints = save_and_disable_interrupts();
   flash_range_erase(SETTINGS_FLASH_OFFSET, FLASH_SECTOR_SIZE);
   flash_range_program(SETTINGS_FLASH_OFFSET, buf, FLASH_PAGE_SIZE);
   restore_interrupts(ints);
+  multicore_lockout_end_blocking();
 }
 
 // Store tags for SSI (server side includes)

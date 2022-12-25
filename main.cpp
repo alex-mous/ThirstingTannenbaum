@@ -30,6 +30,7 @@ extern "C" {
 // Interface/device constants
 #define WIFI_CONNECT_TIMEOUT_MS 5000
 #define VL53L1X_ADDR 0x29
+#define POLL_DELAY_MS 500
 
 // Define min
 #define min(a,b) ({ __typeof__ (a) _a = (a);  __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
@@ -54,7 +55,7 @@ VL53L1X_Status_t measurement_init();
 // Continuously measure distance from the VL53L1X sensor
 void measurement_core();
 // Callback to run filling mode
-void filling_mode_cb(uint gpio, uint32_t event_mask);
+void filling_mode();
 // Get the percentage full (and adjust the bounds if needed)
 double get_fill_percent(uint16_t level);
 
@@ -101,11 +102,7 @@ int main() {
 
   // TODO:
   // --- add buzzer functionality (errors, startup, fillingmode, low??)
-  // --- finish led scale for measurement
   // --- write filling mode (signal start with buzzer, etc)
-  // --- read/write values to flash for max/min level
-  //    --- these should only be configurable from the web interface
-  //    --- need to reboot device to use new values after setting them
 
   //min_level = 20;
   //max_level = 200;
@@ -114,12 +111,14 @@ int main() {
 
   // Initialize the needed hardware
   while (1) {
-    uint16_t curr_level_mm;
-    queue_peek_blocking(&raw_level_mm, &curr_level_mm);
-    std::stringstream ss;
-    ss << "Packet received." << ", dist = " << get_fill_percent(curr_level_mm) << ", gpio = " << gpio_get(SW_R_PIN) << std::endl;
-    status_log(ss.str());
-    sleep_ms(1000);
+    //uint16_t curr_level_mm;
+    //queue_peek_blocking(&raw_level_mm, &curr_level_mm);
+    //std::stringstream ss;
+    //ss << "Packet received." << ", dist = " << get_fill_percent(curr_level_mm) << ", gpio = " << gpio_get(SW_R_PIN) << std::endl;
+    //status_log(ss.str());
+    if (gpio_get(SW_R_PIN) == 1)
+      filling_mode();
+    sleep_ms(POLL_DELAY_MS);
   }
 }
 
@@ -174,6 +173,9 @@ void measurement_core() {
   VL53L1X_Status_t status;
   VL53L1X_Result_t results;
 
+  // Allow this to be paused
+  multicore_lockout_victim_init();
+
   // Measure and print continuously
   bool first_range = true;
   while (1) {
@@ -205,19 +207,18 @@ void measurement_core() {
   }
 }
 
-void filling_mode_cb(uint gpio, uint32_t event_mask) {
+void filling_mode() {
   sleep_ms(25);  // debounce
-  if (gpio_get(gpio) != 1)
+  if (gpio_get(SW_R_PIN) != 1)
     return;
   status_log("Start Filling Mode");
   buzzer_pulse(100, 100, 3);  // 3 short beeps to indicate start
   sleep_ms(1000);
-  while (gpio_get(gpio) == 1) {  // Run while switch is enabled
+  while (gpio_get(SW_R_PIN) == 1) {  // Run while switch is enabled
     uint16_t curr_level_mm;
     queue_peek_blocking(&raw_level_mm, &curr_level_mm);
     double percent = get_fill_percent(curr_level_mm);
     buzzer_pulse(50*(percent)+50, 100*(1-percent)+25, 1);// beep to indicate level
-    status_log(string("Curr percent "));
   }
   sleep_ms(1000);
   status_log("End Filling Mode");
