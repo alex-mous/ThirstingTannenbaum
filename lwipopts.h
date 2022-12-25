@@ -157,7 +157,8 @@
 
 #define LWIP_HTTPD 1
 #define LWIP_HTTPD_SSI 1
+#define LWIP_HTTPD_CGI 1
 #define LWIP_HTTPD_SSI_INCLUDE_TAG 0
-#define HTTPD_FSDATA_FILE "generated_fsdata.cpp"
+#define HTTPD_FSDATA_FILE "generated_fsdata.c"
 
 #endif /* __LWIPOPTS_H__ */

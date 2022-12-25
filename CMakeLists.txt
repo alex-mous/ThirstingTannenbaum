@@ -40,7 +40,7 @@ add_executable(main
     main.cpp
     status.cpp
     io.cpp
-    ssi_server.cpp)
+    server.cpp)
 
 target_link_libraries(main PUBLIC
     pico_stdlib

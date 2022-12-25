@@ -8,7 +8,8 @@
 #define LED_G_PIN 8
 #define LED_B_PIN 7
 
-#define SW_PIN 6
+#define SW_R_PIN 6
+#define SW_W_PIN 10
 
 #define BUZZER_PIN 11
 

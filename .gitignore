@@ -1,5 +1,5 @@
 credentials.h
-generated_fsdata.cpp
+generated_fsdata.c
 build/*
 external/*
 tmp/*

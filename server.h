@@ -5,7 +5,10 @@
 #include "pico/cyw43_arch.h"
 #include "lwipopts.h"
 
-// Initialize SSI Server parameters
-void ssi_init();
+// Settings storage in flash offset
+#define SETTINGS_FLASH_OFFSET (1536 * 1024)
+
+// Initialize SSI &GCI server parameters
+void server_init();
 
 #endif  // _SSI_SERVER_H_
