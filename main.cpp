@@ -34,9 +34,9 @@ extern "C" {
 
 // Define min
 #define min(a,b) ({ __typeof__ (a) _a = (a);  __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
+// Define max
+#define max(a,b) ({ __typeof__ (a) _a = (a);  __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
 
-
-using std::string;
 
 // raw sensor measurement in mm (1 element queue)
 queue_t raw_level_mm;
@@ -133,7 +133,7 @@ void start_server() {
       status_warn("Failed to connect. Retrying in 5s...");
       sleep_ms(WIFI_CONNECT_TIMEOUT_MS);
     } else {
-      status_log("Connected. Starting server at " + string(ip4addr_ntoa(netif_ip4_addr(netif_list))));
+      status_log("Connected. Starting server at " + std::string(ip4addr_ntoa(netif_ip4_addr(netif_list))));
       break;
     }
   }
@@ -212,20 +212,18 @@ void filling_mode() {
   if (gpio_get(SW_R_PIN) != 1)
     return;
   status_log("Start Filling Mode");
-  buzzer_pulse(100, 100, 3);  // 3 short beeps to indicate start
-  sleep_ms(1000);
+  buzzer_pulse(500, 500, 1);  // 1 long beep to indicate start
   while (gpio_get(SW_R_PIN) == 1) {  // Run while switch is enabled
     uint16_t curr_level_mm;
     queue_peek_blocking(&raw_level_mm, &curr_level_mm);
     double percent = get_fill_percent(curr_level_mm);
-    buzzer_pulse(50*(percent)+50, 100*(1-percent)+25, 1);// beep to indicate level
+    buzzer_pulse(50*(percent)+50, 250*(1-percent), 1);// beep to indicate level
   }
-  sleep_ms(1000);
+  sleep_ms(500);
   status_log("End Filling Mode");
-  buzzer_pulse(100, 100, 3);  // 2 short beeps to indicate end
-  sleep_ms(100);  // debounce
+  buzzer_pulse(500, 500, 1);  // 1 long beep to indicate end
 }
 
 double get_fill_percent(uint16_t level) {
-  return (max_level - level) / (double)(max_level - min_level);
+  return max(0, min(1.0, (max_level - level) / (double)(max_level - min_level)));
 }

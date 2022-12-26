@@ -3,7 +3,6 @@
 	<head>
 		<title>ThirstingTannenbaum Christmas Tree Water Monitor</title>
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-		<link rel="apple-touch-icon" href="/maskable_192x192.png">
 		<meta name="viewport" content="width=700" />
 		<meta name="theme-color" content="#ffffff" />
 		<meta id="currLevelMm" data-value="<!--#currLMm-->">
@@ -113,8 +112,11 @@
 	<body>
 		<div class="row">
 			<div class="col text-center py-3">
+				<p>
+					<img height="100" alt="ThirstingTannenbaum logo" src="/logo_192.png">
+				</p>
 				<p class="h1">ThirstingTannenbaum</p>
-		<p class="lead">Raspberry Pi-powered Christmas tree water level monitor</p>
+				<p class="lead">Raspberry Pi Pico W-powered Christmas tree water level helper</p>
 			</div>
 		</div>
 		<ul class="nav nav-tabs justify-content-center" id="navTabs" role="tablist">
